@@ -1,0 +1,20 @@
+.TH SIMPLE_SHELL 1 "September 2025" "simple_shell manual"
+.SH NAME
+simple_shell \- simple UNIX command interpreter
+.SH SYNOPSIS
+.B simple_shell
+[\fIscriptfile\fR]
+.SH DESCRIPTION
+.B simple_shell
+is a lightweight UNIX command interpreter implemented for educational purposes.
+It can execute built-in commands or external programs.
+.SH BUILTIN COMMANDS
+.TP
+.B exit [status]
+Exit the shell with the given status (0 if not provided).
+.TP
+.B env
+Print the current environment.
+.SH AUTHOR
+Azer Aslanov
+
