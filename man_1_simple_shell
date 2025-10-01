@@ -1,0 +1,54 @@
+
+---
+
+# 📌 2. `man_1_simple_shell`
+
+Manual pages are written in **groff (man format)**.  
+Save this in a file called `man_1_simple_shell`:
+
+```man
+.TH simple_shell 1 "September 2025" "1.0" "Simple UNIX Shell"
+.SH NAME
+simple_shell \- simple UNIX command line interpreter
+.SH SYNOPSIS
+.B simple_shell
+.RI [command_file]
+.SH DESCRIPTION
+The
+.B simple_shell
+program is a basic UNIX command line interpreter that executes commands read from the standard input or from a file.
+
+It provides a simple interface to execute programs, handle arguments, and access the system environment.
+
+.SH FEATURES
+.TP
+* Display a prompt and wait for user input.
+.TP
+* Execute commands using their absolute path or by searching in the PATH.
+.TP
+* Handle command lines with arguments.
+.TP
+* Built-in commands:
+- exit: exits the shell
+- env: prints the current environment
+.TP
+* Supports both interactive and non-interactive modes.
+
+.SH USAGE
+In interactive mode:
+.EX
+$ ./hsh
+($) /bin/ls
+main.c shell.c
+($) exit
+.EE
+
+In non-interactive mode:
+.EX
+$ echo "/bin/ls" | ./hsh
+main.c shell.c
+.EE
+
+.SH AUTHORS
+Azer Aslanov, Suleyman Hajizada
+
