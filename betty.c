@@ -1,12 +1,10 @@
 /*
  * File: simple_shell.c
  * Auth: ChatGPT for Azer
- * Project: holbertonschool-simple_shell (single-file reference)
- * Description: A compact, readable POSIX shell that demonstrates
- *              parsing, forking, and executing commands. Written
- *              to follow Betty-style conventions (comments, spacing,
- *              simple functions). This single-file example is meant
- *              to be used as a reference for style and structure.
+ * Project: holbertonschool-simple_shell
+ * Description: A compact POSIX shell that demonstrates parsing,
+ *              forking, and executing commands. Written to pass
+ *              Betty-style documentation and style checks.
  */
 
 #include <stdio.h>
@@ -21,10 +19,10 @@
 #define TOK_DELIM " \t\r\n\a"
 #define PROMPT "$ "
 
-/*
- * Function: print_prompt
- * ----------------------
- * Print the interactive prompt to stdout.
+/**
+ * print_prompt - Prints the interactive prompt to stdout
+ *
+ * Return: Nothing
  */
 void print_prompt(void)
 {
@@ -32,12 +30,11 @@ void print_prompt(void)
         write(STDOUT_FILENO, PROMPT, strlen(PROMPT));
 }
 
-/*
- * Function: read_line
- * -------------------
- * Read a line of input from stdin using getline(). Returns the
- * allocated buffer which must be freed by the caller. On EOF
- * returns NULL.
+/**
+ * read_line - Reads a line of input from stdin
+ *
+ * Return: Pointer to allocated buffer containing the line.
+ *         NULL on EOF or error. Caller must free buffer.
  */
 char *read_line(void)
 {
@@ -54,11 +51,12 @@ char *read_line(void)
     return (line);
 }
 
-/*
- * Function: split_line
- * --------------------
- * Split a line into tokens (arguments). Returns a NULL-terminated
- * array of pointers. Caller must free the array and tokens buffer.
+/**
+ * split_line - Splits a line into tokens (arguments)
+ * @line: Input string to split
+ *
+ * Return: Null-terminated array of strings (tokens).
+ *         Caller must free the array but not the tokens themselves.
  */
 char **split_line(char *line)
 {
@@ -94,11 +92,11 @@ char **split_line(char *line)
     return (tokens);
 }
 
-/*
- * Function: launch
- * ----------------
- * Fork and execute the program specified by args. Parent waits for
- * child to finish. Returns 1 to continue the shell, 0 to exit.
+/**
+ * launch - Forks and executes a program
+ * @args: Null-terminated array of arguments
+ *
+ * Return: 1 to continue running, 0 to exit
  */
 int launch(char **args)
 {
@@ -108,7 +106,6 @@ int launch(char **args)
     pid = fork();
     if (pid == 0)
     {
-        /* Child process */
         if (execvp(args[0], args) == -1)
         {
             perror("execvp");
@@ -117,14 +114,11 @@ int launch(char **args)
     }
     else if (pid < 0)
     {
-        /* Error forking */
         perror("fork");
     }
     else
     {
-        /* Parent process waits for child */
-        do
-        {
+        do {
             wpid = waitpid(pid, &status, WUNTRACED);
             if (wpid == -1)
             {
@@ -137,51 +131,41 @@ int launch(char **args)
     return (1);
 }
 
-/*
- * Function: execute
- * -----------------
- * Execute built-in commands or launch external programs. Returns 1
- * to keep the shell running, or 0 to request exit.
+/**
+ * execute - Executes built-in or external commands
+ * @args: Null-terminated array of arguments
+ *
+ * Return: 1 to keep shell running, 0 to exit
  */
 int execute(char **args)
 {
-    int i;
-
     if (args[0] == NULL)
         return (1);
 
-    /* Built-in: exit */
     if (strcmp(args[0], "exit") == 0)
         return (0);
 
-    /* Built-in: env -- print environment variables using exec of env */
     if (strcmp(args[0], "env") == 0)
-    {
-        /* Replace current args to run /usr/bin/env if available */
         return (launch(args));
-    }
 
-    /* Not a built-in command: launch external */
-    i = launch(args);
-    return (i);
+    return (launch(args));
 }
 
-/*
- * Function: free_args
- * -------------------
- * Free the memory allocated for the tokens array. Note: tokens
- * point inside the original line buffer, so only the tokens array
- * needs to be freed here.
+/**
+ * free_args - Frees the memory allocated for arguments array
+ * @args: Null-terminated array of arguments
+ *
+ * Return: Nothing
  */
 void free_args(char **args)
 {
     free(args);
 }
 
-/*
- * Function: main
- * --------------
- * Entry point: loop that reads input, parses it, and executes it.
+/**
+ * main - Entry point of the shell
+ *
+ * Return: Always EXIT_SUCCESS
  */
 int main(void)
 {
@@ -194,7 +178,7 @@ int main(void)
         print_prompt();
         line = read_line();
         if (line == NULL)
-            break; /* EOF or read error -> exit shell */
+            break;
 
         args = split_line(line);
         status = execute(args);
@@ -203,9 +187,8 @@ int main(void)
         free(line);
 
         if (status == 0)
-            break; /* user typed exit */
+            break;
     }
 
     return (EXIT_SUCCESS);
 }
-
