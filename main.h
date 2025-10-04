@@ -5,5 +5,5 @@ extern char **environ;
 
 void execute_command(char *line);
 
-#endif
+#endif /* MAIN_H */
 
