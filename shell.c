@@ -48,6 +48,7 @@ int main(void)
 	size_t len = 0;
 	ssize_t nread;
 	char *command;
+	char *end;
 
 	while (1)
 	{
@@ -73,7 +74,7 @@ int main(void)
 				command++;
 
 			/* Trim trailing spaces */
-			char *end = command + strlen(command) - 1;
+			end = command + strlen(command) - 1;
 			while (end > command && (*end == ' ' || *end == '\t'))
 			{
 				*end = '\0';
