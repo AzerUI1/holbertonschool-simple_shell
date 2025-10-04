@@ -14,14 +14,13 @@
  */
 char *command_exists(char *cmd)
 {
-	char *path_env, *path, *full_path;
-	char *token;
+	char *path_env, *path_copy, *token, *full_path;
 	struct stat st;
 
-	if (cmd == NULL)
+	if (!cmd)
 		return (NULL);
 
-	if (strchr(cmd, '/') != NULL) /* absolute or relative path */
+	if (strchr(cmd, '/'))
 	{
 		if (stat(cmd, &st) == 0 && (st.st_mode & S_IXUSR))
 			return strdup(cmd);
@@ -32,29 +31,29 @@ char *command_exists(char *cmd)
 	if (!path_env)
 		return NULL;
 
-	path = strdup(path_env);
-	if (!path)
+	path_copy = strdup(path_env);
+	if (!path_copy)
 		return NULL;
 
-	token = strtok(path, ":");
-	while (token != NULL)
+	token = strtok(path_copy, ":");
+	while (token)
 	{
 		full_path = malloc(strlen(token) + strlen(cmd) + 2);
 		if (!full_path)
 		{
-			free(path);
+			free(path_copy);
 			return NULL;
 		}
 		sprintf(full_path, "%s/%s", token, cmd);
 		if (stat(full_path, &st) == 0 && (st.st_mode & S_IXUSR))
 		{
-			free(path);
+			free(path_copy);
 			return full_path;
 		}
 		free(full_path);
 		token = strtok(NULL, ":");
 	}
-	free(path);
+	free(path_copy);
 	return NULL;
 }
 
@@ -72,7 +71,7 @@ void execute_command(char *line)
 	char *full_cmd;
 
 	token = strtok(line, " \t");
-	while (token != NULL && i < 63)
+	while (token && i < 63)
 	{
 		argv[i++] = token;
 		token = strtok(NULL, " \t");
@@ -138,7 +137,7 @@ int main(void)
 		}
 
 		command = strtok(line, "\n");
-		while (command != NULL)
+		while (command)
 		{
 			while (*command == ' ' || *command == '\t')
 				command++;
