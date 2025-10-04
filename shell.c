@@ -6,17 +6,25 @@
 #include "main.h"
 
 /**
- * execute_command - forks and executes a command
+ * execute_command - forks and executes a command with arguments
  * @line: command to execute
  */
 void execute_command(char *line)
 {
 	pid_t pid;
 	int status;
-	char *argv[2];
+	char *argv[20];
+	int i;
+	char *token;
 
-	argv[0] = line;
-	argv[1] = NULL;
+	i = 0;
+	token = strtok(line, " \t"); /* split by spaces/tabs */
+	while (token != NULL && i < 19)
+	{
+		argv[i++] = token;
+		token = strtok(NULL, " \t");
+	}
+	argv[i] = NULL;
 
 	pid = fork();
 	if (pid == -1)
@@ -27,7 +35,7 @@ void execute_command(char *line)
 
 	if (pid == 0)
 	{
-		if (execve(line, argv, environ) == -1)
+		if (execve(argv[0], argv, environ) == -1)
 		{
 			perror("./shell");
 			exit(EXIT_FAILURE);
