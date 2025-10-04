@@ -47,6 +47,7 @@ int main(void)
 	char *line = NULL;
 	size_t len = 0;
 	ssize_t nread;
+	char *command;
 
 	while (1)
 	{
@@ -64,11 +65,19 @@ int main(void)
 			break;
 		}
 
-		line[strcspn(line, "\n")] = '\0';
-		if (line[0] == '\0')
-			continue;
+		/* Split input into multiple commands by newline */
+		command = strtok(line, "\n");
+		while (command != NULL)
+		{
+			/* Trim leading spaces */
+			while (*command == ' ' || *command == '\t')
+				command++;
 
-		execute_command(line);
+			if (*command != '\0')
+				execute_command(command);
+
+			command = strtok(NULL, "\n");
+		}
 	}
 
 	free(line);
