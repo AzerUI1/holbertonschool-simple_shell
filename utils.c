@@ -1,34 +1,52 @@
 #include "main.h"
 
-/**
- * parse_line - splits input line into tokens
- * @line: input string
- * Return: NULL-terminated array of args
- */
-char **parse_line(char *line)
+/* Trim leading and trailing whitespace */
+char *trim_whitespace(char *str)
 {
-	char *token;
-	char **tokens;
-	int bufsize = 64, i = 0;
+    char *end;
+    while (*str == ' ' || *str == '\t')
+        str++;
+    if (*str == 0)
+        return str;
 
-	tokens = malloc(sizeof(char *) * bufsize);
-	if (!tokens)
-		return (NULL);
+    end = str + strlen(str) - 1;
+    while (end > str && (*end == ' ' || *end == '\t'))
+        end--;
 
-	token = strtok(line, " \t\r\n");
-	while (token)
-	{
-		tokens[i++] = token;
-		if (i >= bufsize)
-		{
-			bufsize += 64;
-			tokens = realloc(tokens, sizeof(char *) * bufsize);
-			if (!tokens)
-				return (NULL);
-		}
-		token = strtok(NULL, " \t\r\n");
-	}
-	tokens[i] = NULL;
-	return (tokens);
+    *(end + 1) = '\0';
+    return str;
+}
+
+/* Split a line into tokens */
+char **split_line(char *line, const char *delim)
+{
+    int bufsize = 64, position = 0;
+    char **tokens = malloc(bufsize * sizeof(char *));
+    char *token;
+
+    if (!tokens)
+    {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+
+    token = strtok(line, delim);
+    while (token)
+    {
+        tokens[position++] = token;
+        if (position >= bufsize)
+        {
+            bufsize += 64;
+            tokens = realloc(tokens, bufsize * sizeof(char *));
+            if (!tokens)
+            {
+                perror("realloc");
+                exit(EXIT_FAILURE);
+            }
+        }
+        token = strtok(NULL, delim);
+    }
+    tokens[position] = NULL;
+    return tokens;
 }
 

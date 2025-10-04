@@ -2,10 +2,14 @@
 
 int main(void)
 {
-    char *line = NULL;
-    size_t len = 0;
+    char *line;
+    size_t len;
     ssize_t nread;
     char **args;
+    int i;
+
+    line = NULL;
+    len = 0;
 
     while (1)
     {
@@ -20,14 +24,17 @@ int main(void)
         line = trim_whitespace(line); /* Trim spaces */
 
         if (line[0] == '\0')
-            continue; /* Skip empty lines */
+            continue;
 
         args = split_line(line, " \t\n");
         if (!args)
             continue;
 
-        execute_command(args); /* actually execute command */
+        execute_command(args); /* Execute command */
 
+        /* Free memory allocated by split_line */
+        for (i = 0; args[i] != NULL; i++)
+            free(args[i]);
         free(args);
     }
 

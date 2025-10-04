@@ -1,45 +1,61 @@
 #include "main.h"
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-/**
- * find_path - search for a command in PATH
- * @command: command to find
- * Return: full path if found, else NULL
- */
-char *find_path(char *command)
+extern char **environ; /* For PATH access */
+
+char *find_command(char *cmd)
 {
-	char *path_env, *path_copy, *dir, *full_path;
-	size_t len;
+    int i;
+    char *path_env, *path_copy, *token, *full_path;
+    size_t cmd_len, path_len;
 
-	if (command == NULL)
-		return (NULL);
-	if (strchr(command, '/'))
-		return (strdup(command));
+    cmd_len = strlen(cmd);
+    path_env = NULL;
 
-	path_env = getenv("PATH");
-	if (!path_env)
-		return (NULL);
+    /* Search for PATH in environ manually */
+    for (i = 0; environ[i] != NULL; i++)
+    {
+        if (strncmp(environ[i], "PATH=", 5) == 0)
+        {
+            path_env = environ[i] + 5; /* Skip "PATH=" */
+            break;
+        }
+    }
 
-	path_copy = strdup(path_env);
-	dir = strtok(path_copy, ":");
-	while (dir)
-	{
-		len = strlen(dir) + strlen(command) + 2;
-		full_path = malloc(len);
-		if (!full_path)
-		{
-			free(path_copy);
-			return (NULL);
-		}
-		snprintf(full_path, len, "%s/%s", dir, command);
-		if (access(full_path, X_OK) == 0)
-		{
-			free(path_copy);
-			return (full_path);
-		}
-		free(full_path);
-		dir = strtok(NULL, ":");
-	}
-	free(path_copy);
-	return (NULL);
+    if (path_env == NULL)
+        return NULL;
+
+    path_copy = strdup(path_env);
+    if (path_copy == NULL)
+        return NULL;
+
+    token = strtok(path_copy, ":");
+    while (token != NULL)
+    {
+        path_len = strlen(token);
+        full_path = malloc(path_len + 1 + cmd_len + 1); /* path + '/' + cmd + '\0' */
+        if (full_path == NULL)
+        {
+            free(path_copy);
+            return NULL;
+        }
+        strcpy(full_path, token);
+        full_path[path_len] = '/';
+        strcpy(full_path + path_len + 1, cmd);
+
+        if (access(full_path, X_OK) == 0)
+        {
+            free(path_copy);
+            return full_path; /* Found executable */
+        }
+
+        free(full_path);
+        token = strtok(NULL, ":");
+    }
+
+    free(path_copy);
+    return NULL; /* Not found */
 }
 
