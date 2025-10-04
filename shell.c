@@ -60,20 +60,19 @@ char *command_exists(char *cmd)
 
 /**
  * execute_command - forks and executes a command with arguments
- * @line: command to execute
+ * @line: command line string
  */
 void execute_command(char *line)
 {
 	pid_t pid;
 	int status;
-	char *argv[20];
-	int i;
+	char *argv[64];
+	int i = 0;
 	char *token;
 	char *full_cmd;
 
-	i = 0;
 	token = strtok(line, " \t");
-	while (token != NULL && i < 19)
+	while (token != NULL && i < 63)
 	{
 		argv[i++] = token;
 		token = strtok(NULL, " \t");
@@ -110,9 +109,9 @@ void execute_command(char *line)
 }
 
 /**
- * main - simple UNIX command line interpreter with PATH support
+ * main - simple UNIX shell with PATH and arguments
  *
- * Return: Always 0.
+ * Return: Always 0
  */
 int main(void)
 {
