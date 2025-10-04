@@ -4,6 +4,7 @@
 extern char **environ;
 
 void execute_command(char *line);
+char *command_exists(char *cmd);
 
 #endif /* MAIN_H */
 

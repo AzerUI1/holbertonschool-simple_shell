@@ -3,7 +3,60 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include "main.h"
+
+/**
+ * command_exists - checks if command exists in PATH or as absolute path
+ * @cmd: command to check
+ *
+ * Return: full path if exists (malloc), NULL otherwise
+ */
+char *command_exists(char *cmd)
+{
+	char *path_env, *path, *full_path;
+	char *token;
+	struct stat st;
+
+	if (cmd == NULL)
+		return (NULL);
+
+	if (strchr(cmd, '/') != NULL) /* absolute or relative path */
+	{
+		if (stat(cmd, &st) == 0 && (st.st_mode & S_IXUSR))
+			return strdup(cmd);
+		return NULL;
+	}
+
+	path_env = getenv("PATH");
+	if (!path_env)
+		return NULL;
+
+	path = strdup(path_env);
+	if (!path)
+		return NULL;
+
+	token = strtok(path, ":");
+	while (token != NULL)
+	{
+		full_path = malloc(strlen(token) + strlen(cmd) + 2);
+		if (!full_path)
+		{
+			free(path);
+			return NULL;
+		}
+		sprintf(full_path, "%s/%s", token, cmd);
+		if (stat(full_path, &st) == 0 && (st.st_mode & S_IXUSR))
+		{
+			free(path);
+			return full_path;
+		}
+		free(full_path);
+		token = strtok(NULL, ":");
+	}
+	free(path);
+	return NULL;
+}
 
 /**
  * execute_command - forks and executes a command with arguments
@@ -16,9 +69,10 @@ void execute_command(char *line)
 	char *argv[20];
 	int i;
 	char *token;
+	char *full_cmd;
 
 	i = 0;
-	token = strtok(line, " \t"); /* split by spaces/tabs */
+	token = strtok(line, " \t");
 	while (token != NULL && i < 19)
 	{
 		argv[i++] = token;
@@ -26,16 +80,24 @@ void execute_command(char *line)
 	}
 	argv[i] = NULL;
 
+	full_cmd = command_exists(argv[0]);
+	if (!full_cmd)
+	{
+		fprintf(stderr, "./shell: %s: not found\n", argv[0]);
+		return;
+	}
+
 	pid = fork();
 	if (pid == -1)
 	{
 		perror("fork");
+		free(full_cmd);
 		return;
 	}
 
 	if (pid == 0)
 	{
-		if (execve(argv[0], argv, environ) == -1)
+		if (execve(full_cmd, argv, environ) == -1)
 		{
 			perror("./shell");
 			exit(EXIT_FAILURE);
@@ -43,10 +105,12 @@ void execute_command(char *line)
 	}
 	else
 		wait(&status);
+
+	free(full_cmd);
 }
 
 /**
- * main - simple UNIX command line interpreter
+ * main - simple UNIX command line interpreter with PATH support
  *
  * Return: Always 0.
  */
@@ -62,7 +126,7 @@ int main(void)
 	{
 		if (isatty(STDIN_FILENO))
 		{
-			printf("#cisfun$ ");
+			printf(":) ");
 			fflush(stdout);
 		}
 
@@ -77,11 +141,9 @@ int main(void)
 		command = strtok(line, "\n");
 		while (command != NULL)
 		{
-			/* Trim leading spaces */
 			while (*command == ' ' || *command == '\t')
 				command++;
 
-			/* Trim trailing spaces */
 			end = command + strlen(command) - 1;
 			while (end > command && (*end == ' ' || *end == '\t'))
 			{
