@@ -1,8 +1,8 @@
 #include <stdio.h>
-#include <sys/wait.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #include "main.h"
 
 /**
@@ -13,7 +13,10 @@ void execute_command(char *line)
 {
 	pid_t pid;
 	int status;
-	char *argv[] = {line, NULL};
+	char *argv[2];
+
+	argv[0] = line;
+	argv[1] = NULL;
 
 	pid = fork();
 	if (pid == -1)
