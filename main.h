@@ -12,8 +12,9 @@
 
 extern char **environ;
 
-char *command_exists(char *cmd);
-void execute_command(char *line);
+char *find_path(char *command);
+void execute_command(char **args);
+char **parse_line(char *line);
 
 #endif /* MAIN_H */
 
