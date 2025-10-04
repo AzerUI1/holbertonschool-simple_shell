@@ -50,13 +50,17 @@ int main(void)
 
 	while (1)
 	{
-		printf("#cisfun$ ");
-		fflush(stdout);
+		if (isatty(STDIN_FILENO))
+		{
+			printf("#cisfun$ ");
+			fflush(stdout);
+		}
 
 		nread = getline(&line, &len, stdin);
 		if (nread == -1)
 		{
-			printf("\n");
+			if (isatty(STDIN_FILENO))
+				printf("\n");
 			break;
 		}
 
