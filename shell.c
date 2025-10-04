@@ -65,13 +65,20 @@ int main(void)
 			break;
 		}
 
-		/* Split input into multiple commands by newline */
 		command = strtok(line, "\n");
 		while (command != NULL)
 		{
 			/* Trim leading spaces */
 			while (*command == ' ' || *command == '\t')
 				command++;
+
+			/* Trim trailing spaces */
+			char *end = command + strlen(command) - 1;
+			while (end > command && (*end == ' ' || *end == '\t'))
+			{
+				*end = '\0';
+				end--;
+			}
 
 			if (*command != '\0')
 				execute_command(command);
