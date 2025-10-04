@@ -1,25 +1,21 @@
 #ifndef MAIN_H
 #define MAIN_H
-
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <stddef.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+extern char **environ;
 
-#define PROMPT ":) "
-
-int _strlen(char *s);
-char *_strcpy(char *dest, char *src);
-char *_strcat(char *dest, char *src);
-char **split_line(char *line, const char *delim);
-char *trim_whitespace(char *str);
-char *find_command(char *cmd);
-int execute_command(char **args);
-
+char **line_devider(char *buffer, char **arr);
+char *get_input(void);
+void execute_command(char *buffer, char **argv);
+void handle_path(char *buffer, char **argv);
+void handle_env(char *buffer);
+int path_handler(char *buffer);
 #endif
-

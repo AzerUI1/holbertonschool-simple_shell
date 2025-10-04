@@ -1,49 +1,16 @@
 #include "main.h"
-
-/* Execute a command */
-int execute_command(char **args)
+/**
+* execute_command - execute the path or command that given
+* @storage: buffer (input from shell)
+* @arr: arguments array
+*
+*/
+void execute_command(char *storage, char **arr)
 {
-    pid_t pid;
-    int status;
-    char *cmd_path;
-
-    if (!args[0])
-        return 1;
-
-    /* Absolute or relative path */
-    if (strchr(args[0], '/'))
-        cmd_path = args[0];
-    else
-        cmd_path = find_command(args[0]);
-
-    if (!cmd_path)
-    {
-        fprintf(stderr, "%s: command not found\n", args[0]);
-        return 127;
-    }
-
-    pid = fork();
-    if (pid == 0)
-    {
-        /* Child */
-        execve(cmd_path, args, NULL);
-        perror("execve");
-        exit(EXIT_FAILURE);
-    }
-    else if (pid < 0)
-    {
-        perror("fork");
-    }
-    else
-    {
-        /* Parent */
-        waitpid(pid, &status, 0);
-    }
-
-    /* If we malloced cmd_path in find_command, free it */
-    if (!strchr(args[0], '/'))
-        free(cmd_path);
-
-    return status;
+	if (execve(storage, arr, environ) == -1)
+	{
+		perror("Error");
+		free(storage);
+		exit(EXIT_FAILURE);
+	}
 }
-
