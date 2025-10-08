@@ -1,27 +1,22 @@
 #include "main.h"
-
-/**
- * _getenv - function to get the value of an env variable
- * @name: name of the values
- * Return: pointer to the value of the variable, NULL il failed
- */
+#include <string.h>
 
 char *_getenv(const char *name)
 {
-	int i;
-	size_t name_len;
+    int i, j;
+    size_t len;
 
-	if (name == NULL || environ == NULL)
-		return (NULL);
+    if (!name || !environ)
+        return (NULL);
 
-	name_len = strlen(name);
-
-	for (i = 0 ; environ[i] != NULL ; i++)
-	{
-		if (strncmp(environ[i], name, name_len) == 0 && environ[i][name_len] == '=')
-		{
-			return (&environ[i][name_len + 1]);
-		}
-	}
-	return (NULL);
+    len = strlen(name);
+    for (i = 0; environ[i]; i++)
+    {
+        j = 0;
+        while (j < (int)len && environ[i][j] == name[j])
+            j++;
+        if (j == (int)len && environ[i][j] == '=')
+            return (&environ[i][len + 1]);
+    }
+    return (NULL);
 }

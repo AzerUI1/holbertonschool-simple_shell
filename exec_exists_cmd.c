@@ -1,115 +1,153 @@
 #include "main.h"
+#include <sys/stat.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
 
+/**
+ * _strlen - Returns the length of a string
+ * @s: The string
+ * Return: length
+ */
+int _strlen(const char *s)
+{
+    int len = 0;
+    if (!s)
+        return 0;
+
+    while (s[len] != '\0')
+        len++;
+
+    return len;
+}
+
+/**
+ * _strcpy - Copies a string from src to dest
+ * @dest: Destination
+ * @src: Source
+ * Return: dest
+ */
+char *_strcpy(char *dest, const char *src)
+{
+    int i;
+    for (i = 0; src[i] != '\0'; i++)
+        dest[i] = src[i];
+    dest[i] = '\0';
+    return dest;
+}
 
 /**
  * file_exist - Checks if a file exists.
  * @file: The name of the file to check.
- * Return: EXIT_SUCCESS if the file exists, EXIT_FAILURE otherwise.
+ * Return: 0 if exists, 1 if not
  */
-
-
 int file_exist(char *file)
 {
-	struct stat st;
-
-	if (stat(file, &st) == 0)
-		return (EXIT_SUCCESS);
-
-	return (EXIT_FAILURE);
+    struct stat st;
+    if (stat(file, &st) == 0)
+        return 0;
+    return 1;
 }
 
 /**
- * find_cmd_path - finds full path of a command in PATH environment variable.
- * @cmd: The command to find
- * @work_buffer: The buffer to store the full path.
- * Return: EXIT_SUCCESS if the command is found, EXIT_FAILURE otherwise.
+ * find_cmd_path - Finds full path of a command in PATH.
+ * @cmd: Command name
+ * @work_buffer: Buffer to store full path
+ * Return: 0 if found, 1 if not
  */
-
 int find_cmd_path(char *cmd, char *work_buffer)
 {
-	char *token;
-	char *var_path, *var_value_path;
-	/* Look if file exists only if command starts with "/" or "./" or "../"*/
-	/* If so, absolute path, no need to check the PATH. */
-	if ((cmd[0] == '/' || strncmp(cmd, "./", 2) == 0 ||
-		strncmp(cmd, "../", 3) == 0) && file_exist(cmd) == EXIT_SUCCESS)
-		return (EXIT_SUCCESS);
+    char *var_value_path;
+    char path_copy[1024];
+    int i, j, k, m;
 
-	var_value_path = _getenv("PATH");
-	if (var_value_path == NULL)  /* If no PATH variable: like if PATH was unset */
-		return (EXIT_FAILURE);
-	if (strlen(var_value_path) == 0)/* if PATH= , defined but empty*/
-		return (EXIT_FAILURE);
+    /* Absolute or relative path */
+    if ((cmd[0] == '/' || (cmd[0] == '.' && cmd[1] == '/')) && file_exist(cmd) == 0)
+    {
+        _strcpy(work_buffer, cmd);
+        return 0;
+    }
 
-	var_path = strdup(var_value_path);
-	if (var_path == NULL)
-		return (EXIT_FAILURE);
+    var_value_path = _getenv("PATH");
+    if (!var_value_path || _strlen(var_value_path) == 0)
+        return 1;
 
-	token = strtok(var_path, ":");
-	while (token)
-	{
-		if (sprintf(work_buffer, "%s/%s", token, cmd) < 0)
-		{
-			free(var_path);
-			return (EXIT_FAILURE);
-		}
-		/*test if current PATH path+cmd exists*/
-		if (file_exist(work_buffer) == EXIT_SUCCESS)
-		{
-			free(var_path);
-			return (EXIT_SUCCESS);
-		}
-		token = strtok(NULL, ":");
-	}
-	free(var_path);
-	return (EXIT_FAILURE);
+    /* Copy PATH so we can tokenize */
+    i = 0;
+    while (var_value_path[i] != '\0' && i < 1023)
+    {
+        path_copy[i] = var_value_path[i];
+        i++;
+    }
+    path_copy[i] = '\0';
+
+    i = 0;
+    j = 0;
+    while (1)
+    {
+        if (path_copy[i] == ':' || path_copy[i] == '\0')
+        {
+            path_copy[i] = '\0';
+
+            /* build full path: token + "/" + cmd */
+            for (k = 0; path_copy[j + k] != '\0'; k++)
+                work_buffer[k] = path_copy[j + k];
+            work_buffer[k++] = '/';
+
+            m = 0;
+            while (cmd[m] != '\0')
+            {
+                work_buffer[k++] = cmd[m];
+                m++;
+            }
+            work_buffer[k] = '\0';
+
+            if (file_exist(work_buffer) == 0)
+                return 0;
+
+            if (path_copy[i] == '\0')
+                break;
+            j = i + 1;
+        }
+        i++;
+    }
+
+    return 1;
 }
+
 /**
- * execute_command - Executes a command.
- * @argv: The array of arguments for the command.
- * Return: EXIT_SUCCESS on success, EXIT_FAILURE on failure.
+ * execute_command - Executes a command
+ * @argv: Argument array
+ * Return: Exit status
  */
-
-int execute_command(char **argv)
+int execute_command(char *argv[])
 {
-	pid_t child_pid;
-	int status;
-	char *cmd = argv[0], *work_buffer;
+    pid_t pid;
+    int status;
+    char work_buffer[1024];
 
-	work_buffer = malloc(1024);
-	if (work_buffer == NULL)
-		return (shell_error());
-	/* init with received value cmd=argv[0] */
-	if (strcpy(work_buffer, cmd) != work_buffer)
-	{
-		free(work_buffer);
-		return (shell_error());
-	}
-	if (find_cmd_path(cmd, work_buffer) == EXIT_FAILURE)
-	{
-		fprintf(stderr, "./hsh: 1: %s: not found\n", cmd);
-		free(work_buffer);
-		return (127);
-	}
-	child_pid = fork();
-	if (child_pid == -1)
-	{
-		free(work_buffer);
-		return (shell_error());
-	}
-	if (child_pid == 0)
-	{
-		if (execve(work_buffer, argv, environ) == -1)
-		{
-			fprintf(stderr, "./hsh: 1: %s: not found\n", cmd);
-			free(work_buffer);
-			exit(127);
-		}
-		exit(EXIT_FAILURE);
-	}
-	wait(&status);
-	free(work_buffer);
-	if (WIFEXITED(status))
-		status = WEXITSTATUS(status); /* status of child */
-	return (status);
+    if (find_cmd_path(argv[0], work_buffer))
+    {
+        fprintf(stderr, "./hsh: 1: %s: not found\n", argv[0]);
+        return 127;
+    }
+
+    pid = fork();
+    if (pid < 0)
+        return shell_error();
+
+    if (pid == 0)
+    {
+        execve(work_buffer, argv, environ);
+        /* If execve fails */
+        fprintf(stderr, "./hsh: 1: %s: not found\n", argv[0]);
+        exit(127);
+    }
+
+    wait(&status);
+
+    if (WIFEXITED(status))
+        status = WEXITSTATUS(status);
+
+    return status;
 }
