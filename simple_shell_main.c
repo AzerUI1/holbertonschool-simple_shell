@@ -14,6 +14,7 @@ int main(void)
     int ret = 0;
     ssize_t nread;
     int interactive;
+    int i;
 
     /* Ignore Ctrl+C */
     signal(SIGINT, SIG_IGN);
@@ -62,8 +63,12 @@ int main(void)
             ret = execute_command(argv);
 
         /* Free memory */
-        for (int i = 0; argv[i]; i++)
+        i = 0;
+        while (argv[i])
+        {
             free(argv[i]);
+            i++;
+        }
         free(argv);
     }
 
