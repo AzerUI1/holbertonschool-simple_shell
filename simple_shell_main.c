@@ -1,7 +1,7 @@
 #include "main.h"
-#include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <stdlib.h>
 
 /**
  * main - Entry point of the simple shell.
@@ -10,12 +10,10 @@
 int main(void)
 {
     char buffer[1024];
-    char *argv[64];
+    char **argv;
     int ret = 0;
     ssize_t nread;
     int interactive;
-    int argc;
-    char *tok;
 
     /* Ignore Ctrl+C */
     signal(SIGINT, SIG_IGN);
@@ -26,7 +24,7 @@ int main(void)
         if (interactive)
             write(1, "#simple_shell$ ", 14);
 
-        nread = read(STDIN_FILENO, buffer, 1023);
+        nread = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
         if (nread <= 0)
         {
             if (interactive)
@@ -37,6 +35,7 @@ int main(void)
         buffer[nread] = '\0';
         if (buffer[nread - 1] == '\n')
             buffer[nread - 1] = '\0';
+
         if (buffer[0] == '\0')
             continue;
 
@@ -53,19 +52,21 @@ int main(void)
             buffer[2] == 'i' && buffer[3] == 't' && buffer[4] == '\0')
             break;
 
-        /* Tokenize input into argv */
-        argc = 0;
-        tok = strtok(buffer, " \t");
-        while (tok && argc < 63)
-        {
-            argv[argc++] = tok;
-            tok = strtok(NULL, " \t");
-        }
-        argv[argc] = NULL;
+        /* Split input into arguments using custom function */
+        argv = fill_args(buffer);
+        if (!argv)
+            continue;
 
+        /* Execute command */
         if (argv[0])
             ret = execute_command(argv);
+
+        /* Free memory */
+        for (int i = 0; argv[i]; i++)
+            free(argv[i]);
+        free(argv);
     }
 
-    return (ret);
+    return ret;
 }
+
