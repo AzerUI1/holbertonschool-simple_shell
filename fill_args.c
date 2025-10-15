@@ -1,49 +1,71 @@
 #include "main.h"
-#include <string.h> 
+#include <stdlib.h>
+
 /**
- * fill_args - split input line into arguments
- * @line: input line
- *
+ * count_words - counts words in a string separated by spaces/tabs/newlines
+ * @s: input string
+ * Return: number of words
+ */
+int count_words(char *s)
+{
+    int count = 0, i = 0;
+    while (s[i])
+    {
+        while (s[i] == ' ' || s[i] == '\t' || s[i] == '\n')
+            i++;
+        if (s[i])
+        {
+            count++;
+            while (s[i] && s[i] != ' ' && s[i] != '\t' && s[i] != '\n')
+                i++;
+        }
+    }
+    return count;
+}
+
+/**
+ * fill_args - splits a line into tokens (no strtok, no memcpy)
+ * @line: user input
  * Return: NULL-terminated array of strings
  */
 char **fill_args(char *line)
 {
     char **args;
-    char *arg;
-    int i = 0, j, start, len = 0;
+    int i = 0, j, k, start, end, word_count;
 
     if (!line)
-        return (NULL);
+        return NULL;
 
-    args = malloc(sizeof(char *) * 64); /* supports up to 63 args */
+    word_count = count_words(line);
+    args = (char **)malloc((word_count + 1) * sizeof(char *));
     if (!args)
-        return (NULL);
+        return NULL;
 
-    while (line[len])
+    k = 0;
+    while (line[i])
     {
-        while (line[len] == ' ' || line[len] == '\t' || line[len] == '\n')
-            len++;
-        if (!line[len])
+        while (line[i] == ' ' || line[i] == '\t' || line[i] == '\n')
+            i++;
+        if (line[i] == '\0')
             break;
 
-        start = len;
-        while (line[len] && line[len] != ' ' && line[len] != '\t' && line[len] != '\n')
-            len++;
+        start = i;
+        while (line[i] && line[i] != ' ' && line[i] != '\t' && line[i] != '\n')
+            i++;
+        end = i;
 
-        arg = malloc(len - start + 1);
-        if (!arg)
-        {
-            for (j = 0; j < i; j++)
-                free(args[j]);
-            free(args);
-            return (NULL);
-        }
+        args[k] = (char *)malloc(end - start + 1);
+        if (!args[k])
+            return NULL;
 
-        memcpy(arg, &line[start], len - start);
-        arg[len - start] = '\0';
-        args[i++] = arg;
+        /* Manual copy instead of memcpy */
+        for (j = 0; j < end - start; j++)
+            args[k][j] = line[start + j];
+        args[k][j] = '\0';
+
+        k++;
     }
-
-    args[i] = NULL;
-    return (args);
+    args[k] = NULL;
+    return args;
 }
+
